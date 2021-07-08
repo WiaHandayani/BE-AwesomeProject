@@ -11,14 +11,14 @@ $pass   = "";
 $db     = "db_get_haircut";
 
 function random($panjang){
-    $karakter = '1234567890';
-    $string = '';
-    for($i = 0; $i < $panjang; $i++){
-        $pos = rand(0, strlen($karakter)-1);
-        $string .= $karakter{$pos};
+    $result = '';
+
+    for($i = 0; $i < $panjang; $i++) {
+        $result .= mt_rand(0, 9);
     }
-    return $string;
- }
+
+    return $result;
+}
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
 
@@ -40,6 +40,8 @@ switch ($op) {
     case 'ganti_pw': ganti_pw();break;
     case 'cari_salonbarber': cari_salonbarber();break;
     case 'cari': cari();break;
+    case 'cari_barber': cari_barber();break;
+    case 'cari_salon': cari_salon();break;
     case 'salon': salon();break;
     case 'barber': barber();break;
 }
@@ -412,6 +414,40 @@ function cari(){
     global $koneksi;
     $nama_usaha=  $_POST['nama_usaha'];
     $sql1 = "select * from tb_usaha where nama_usaha like '%$nama_usaha%'";
+    $q1 = mysqli_query($koneksi, $sql1);
+    while ($r1 = mysqli_fetch_array($q1)) {
+        $hasil[]= array(
+            'id_usaha' => $r1['id_usaha'],
+            'nama_usaha' => $r1['nama_usaha'],
+            'alamat' => $r1['alamat'],
+            'foto_profil' => $r1['foto_profil']  
+        );
+    }
+    $data= $hasil;
+    echo json_encode($data); 
+}
+
+function cari_barber(){
+    global $koneksi;
+    $nama_usaha=  $_POST['nama_usaha'];
+    $sql1 = "select * from tb_usaha where nama_usaha like '%$nama_usaha%' AND jenis_usaha='barber' ";
+    $q1 = mysqli_query($koneksi, $sql1);
+    while ($r1 = mysqli_fetch_array($q1)) {
+        $hasil[]= array(
+            'id_usaha' => $r1['id_usaha'],
+            'nama_usaha' => $r1['nama_usaha'],
+            'alamat' => $r1['alamat'],
+            'foto_profil' => $r1['foto_profil']  
+        );
+    }
+    $data= $hasil;
+    echo json_encode($data); 
+}
+
+function cari_salon(){
+    global $koneksi;
+    $nama_usaha=  $_POST['nama_usaha'];
+    $sql1 = "select * from tb_usaha where nama_usaha like '%$nama_usaha%' AND jenis_usaha='salon' ";
     $q1 = mysqli_query($koneksi, $sql1);
     while ($r1 = mysqli_fetch_array($q1)) {
         $hasil[]= array(
