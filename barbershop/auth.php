@@ -99,7 +99,7 @@ class Auth {
 
             $hasil['success']= true;
             $hasil['message']= 'Login berhasil!';
-            $hasil['data'] = mysqli_fetch_array($auth);
+            $hasil['data'] = mysqli_fetch_assoc($auth);
 
             echo json_encode($hasil);
 
@@ -107,7 +107,8 @@ class Auth {
             
             $hasil['success']= false;
             $hasil['message']= 'Email atau password salah';
-
+            $hasil['data'] = null;
+            
             echo json_encode($hasil);
         }
 
@@ -118,7 +119,7 @@ class Auth {
      * 
      */
 
-    private function base64_to_jpeg($base64_string, $output_file) {
+    public function base64_to_jpeg($base64_string, $output_file) {
 		$fileName = 'foto_'.$output_file.'/'.$output_file.'_'.time().'.jpeg';
 		// open the output file for writing
 		$ifp = fopen( '../'.$fileName, 'w' ); 
@@ -142,7 +143,7 @@ class Auth {
 	
 	}
 
-    private function random($panjang){
+    public function random($panjang){
         $result = '';
     
         for($i = 0; $i < $panjang; $i++) {
