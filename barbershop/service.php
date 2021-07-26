@@ -18,7 +18,7 @@ class Service {
 
     public function getAll()
     {
-        $q = "SELECT * FROM {$this->table} WHERE id_usaha = '{$_POST['id_usaha']}'";
+        $q = "SELECT * FROM {$this->table} WHERE id_usaha = {$_POST['id_usaha']}";
         $services = mysqli_query($this->koneksi, $q);
 
         if (mysqli_num_rows($services)) {
@@ -33,7 +33,7 @@ class Service {
             
             $hasil['success']= false;
             $hasil['message']= 'No result found!';
-            $hasil['data'] = null;
+            $hasil['data'] = $q;
             
             echo json_encode($hasil);
         }
@@ -42,7 +42,7 @@ class Service {
     public function addNew()
     {
         $auth = new Auth();
-        $q = "INSERT INTO {$this->table} (id_usaha, nama_pelayanan, harga, deskripsi, foto) VALUE ({$_POST['id_usaha']}, '{$_POST['nama_pelayanan']}', {$_POST['harga']}, '{$_POST['deskripsi']}', '{$auth->base64_to_jpeg($_POST['foto'], 'pelayanan')}') ";
+        $q = "INSERT INTO {$this->table} (id_usaha, nama_pelayanan, harga, deskripsi, foto, estimasi_waktu) VALUE ({$_POST['id_usaha']}, '{$_POST['nama_pelayanan']}', {$_POST['harga']}, '{$_POST['deskripsi']}', '{$auth->base64_to_jpeg($_POST['foto'], 'pelayanan')}', {$_POST['estimasi_waktu']}) ";
         $cek = mysqli_query($this->koneksi, $q);
         if ($cek) {
             $hasil['success']= true;
@@ -85,6 +85,7 @@ class Service {
         $q = "UPDATE {$this->table} SET 
             nama_pelayanan = '{$_POST['nama_pelayanan']}',
             harga = {$_POST['harga']},
+            estimasi_waktu = {$_POST['estimasi_waktu']},
             deskripsi = '{$_POST['deskripsi']}'";
         if ($_POST['changeImage'] !== "false") {
             $q .= ", foto = '{$auth->base64_to_jpeg($_POST['foto'], 'pelayanan')}'";

@@ -44,7 +44,274 @@ switch ($op) {
     case 'cari_salon': cari_salon();break;
     case 'salon': salon();break;
     case 'barber': barber();break;
+    case 'list-barber': listBarber();break;
+    case 'addorder': addOrder();break;
+    case 'addvisit': addVisit();break;
+    case 'seenoften': seenOften();break;
+    case 'savingpackage': savingPackage();break;
+    case 'order_last': orderLast();break;
+    case 'lastvisited': lastVisited();break;
+    case 'activity_order': activityOrder();break;
+    case 'history_order': historyOrder();break;
 }
+
+function orderLast() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q1 = "SELECT COUNT(*) as six_month FROM tb_order WHERE id_user = $_POST[id_user] AND tgl_order > DATE_SUB(NOW(), INTERVAL 6 MONTH)";
+    $q2 = "SELECT COUNT(*) as one_month FROM tb_order WHERE id_user = $_POST[id_user] AND tgl_order > DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        
+    $f_q1 = mysqli_fetch_assoc(mysqli_query($koneksi, $q1));
+    $f_q2 = mysqli_fetch_assoc(mysqli_query($koneksi, $q2));
+
+    if ($q1 && $q2) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Get last order 6 month & 1 month',
+            'data' => [
+                'sm' => $f_q1,
+                'om' => $f_q2,
+            ],
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error get last orders',
+        ]);        
+    }
+}
+
+function addVisit() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q = "INSERT INTO tb_visitor 
+        (id_user, id_usaha, visit)
+        VALUES
+        ($post[id_user], $post[id_usaha], 1)";
+        
+    $insert = mysqli_query($koneksi, $q);
+
+    if ($insert) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Pesanan berhasil ditambahkan, mohon menunggu konfirmasi dari pihak penyedia layanan',
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => $q,
+        ]);        
+    }
+}
+
+function addOrder() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q = "SELECT COUNT(*) as total FROM tb_order
+        WHERE id_usaha = $post[id_usaha]
+        AND status_order = 'belum selesai'
+        AND tgl_order = '".date('Y-m-d')."'";
+        
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        if (mysqli_fetch_assoc($sql)['total'] >= 10) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Pesanan sudah penuh, harap menunggu beberapa saat!',
+            ]);
+        } else {
+            $q = "INSERT INTO tb_order 
+                (id_user, id_usaha, id_pelayanan, tgl_order )
+                VALUES
+                ($post[id_user], $post[id_usaha], $post[id_pelayanan], '".date('Y-m-d')."')";
+
+            $insert = mysqli_query($koneksi, $q);
+
+            if ($insert) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Pesanan berhasil ditambahkan, mohon menunggu konfirmasi dari pihak penyedia layanan',
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Gagal menambahkan pesanan',
+                ]);        
+            }
+        }
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+        ]);
+    }
+}
+
+function lastVisited() {
+    global $koneksi;
+
+    $q = "SELECT us.* FROM tb_visitor as v
+            JOIN tb_usaha as us
+            ON v.id_usaha = us.id_usaha
+            WHERE v.id_user = $_POST[id_user]
+            ORDER BY id_visitor DESC
+            LIMIT 3
+            -- GROUP BY v.id_usaha, v.id_user
+            ";
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data last visited',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => []
+        ]);
+    }
+}
+
+function seenOften() {
+    global $koneksi;
+
+    $q = "SELECT us.*, SUM(v.visit) AS total FROM tb_visitor as v
+            JOIN tb_usaha as us
+            ON v.id_usaha = us.id_usaha
+            WHERE v.id_user = $_POST[id_user]
+            GROUP BY v.id_usaha, v.id_user
+            ORDER BY total DESC
+            ";
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data seen often',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => []
+        ]);
+    }
+}
+
+function activityOrder() {
+    global $koneksi;
+
+    $q = "SELECT o.status_order, o.no_antri, o.tgl_order, o.estimasi_waktu, u.*, p.harga, p.foto, p.nama_pelayanan, p.deskripsi, u.foto_profil
+        FROM tb_order as o
+        JOIN tb_usaha as u
+        ON u.id_usaha = o.id_usaha
+        JOIN tb_pelayanan as p
+        ON p.id_usaha = o.id_usaha
+        WHERE o.id_user = $_POST[id_user]
+        AND status_order != 'selesai'
+    ";
+
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data activity order',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => $q
+        ]);
+    }
+}
+
+function historyOrder() {
+    global $koneksi;
+
+    $q = "SELECT o.status_order, o.no_antri, o.tgl_order, o.estimasi_waktu, u.*, p.harga, p.foto, p.nama_pelayanan, p.deskripsi, u.foto_profil
+        FROM tb_order as o
+        JOIN tb_usaha as u
+        ON u.id_usaha = o.id_usaha
+        JOIN tb_pelayanan as p
+        ON p.id_usaha = o.id_usaha
+        WHERE o.id_user = $_POST[id_user]
+        AND status_order = 'selesai'
+    ";
+
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data history order',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => $q
+        ]);
+    }
+}
+
+function savingPackage() {
+    global $koneksi;
+
+    $q = "SELECT p.*, u.nama_usaha FROM tb_pelayanan as p
+        JOIN tb_usaha as u
+        ON u.id_usaha = p.id_usaha
+        ORDER BY p.harga ASC";
+
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data saving package',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => $q
+        ]);
+    }
+}
+
+function listBarber() {
+    global $koneksi;
+
+    $q = "SELECT * FROM tb_usaha WHERE verif_data = 1";
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data list barber\'s',
+            'data' => mysqli_fetch_all($sql, MYSQLI_ASSOC)
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => []
+        ]);
+    }
+}
+
 function create(){
     global $koneksi;
     $email = $_POST['email'];
