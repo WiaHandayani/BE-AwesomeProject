@@ -53,6 +53,7 @@ switch ($op) {
     case 'lastvisited': lastVisited();break;
     case 'activity_order': activityOrder();break;
     case 'history_order': historyOrder();break;
+    case 'batal_order': batalOrder();break;
 }
 
 function orderLast() {
@@ -103,6 +104,28 @@ function addVisit() {
             'success' => false,
             'message' => $q,
         ]);        
+    }
+}
+
+function batalOrder() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q = "DELETE FROM tb_order
+        WHERE id_order = $post[id_order]";
+        
+    $sql = mysqli_query($koneksi, $q);
+
+    if ($sql) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Pesanan berhasil batalkan',
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+        ]);
     }
 }
 
@@ -209,7 +232,7 @@ function seenOften() {
 function activityOrder() {
     global $koneksi;
 
-    $q = "SELECT o.status_order, o.no_antri, o.tgl_order, o.estimasi_waktu, u.*, p.harga, p.foto, p.nama_pelayanan, p.deskripsi, u.foto_profil
+    $q = "SELECT o.id_order, o.status_order, o.no_antri, o.tgl_order, o.estimasi_waktu, u.*, p.harga, p.foto, p.nama_pelayanan, p.deskripsi, u.foto_profil
         FROM tb_order as o
         JOIN tb_usaha as u
         ON u.id_usaha = o.id_usaha
@@ -217,6 +240,8 @@ function activityOrder() {
         ON p.id_usaha = o.id_usaha
         WHERE o.id_user = $_POST[id_user]
         AND status_order != 'selesai'
+        OR status_order IS NULL
+        GROUP BY o.id_order
     ";
 
     $sql = mysqli_query($koneksi, $q);
