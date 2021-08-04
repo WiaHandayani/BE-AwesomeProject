@@ -54,6 +54,35 @@ switch ($op) {
     case 'activity_order': activityOrder();break;
     case 'history_order': historyOrder();break;
     case 'batal_order': batalOrder();break;
+    case 'profit_now': pendapatanHariIni();break;
+    case 'orderlast_user': orderLast_user();break;
+}
+
+function pendapatanHariIni() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q = "SELECT SUM(p.harga) AS total FROM tb_order AS o
+        JOIN tb_pelayanan AS p
+        ON o.id_pelayanan = p.id_pelayanan
+        WHERE o.id_usaha = $post[id_usaha]
+        AND o.tgl_order = '".date('Y-m-d')."'
+        AND o.status_order = 'selesai' ";
+
+    $fetch = mysqli_fetch_assoc(mysqli_query($koneksi, $q));
+    
+    if ($fetch) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Get get profit day',
+            'data' => $fetch
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error get profit day',
+        ]);  
+    }
 }
 
 function orderLast() {
@@ -80,6 +109,58 @@ function orderLast() {
             'success' => false,
             'message' => 'Error get last orders',
         ]);        
+    }
+}
+
+function orderLast_user() {
+    global $koneksi;
+
+    $q = "SELECT tb_order.*, DATE_FORMAT(tb_order.tgl_order, '%d/%M') as tgl,
+            tb_pelayanan.nama_pelayanan, tb_pelayanan.harga, 
+            tb_users.foto_profil, 
+            tb_users.nama 
+            FROM tb_order
+            LEFT OUTER JOIN tb_users 
+            ON tb_order.id_user = tb_users.id_users 
+            JOIN tb_pelayanan 
+            ON tb_pelayanan.id_pelayanan = tb_order.id_pelayanan 
+            WHERE tb_order.status_order = 'selesai' 
+            AND tb_order.id_usaha = {$_POST['id_usaha']}
+            AND tb_order.tgl_order > DATE_SUB(NOW(), INTERVAL 1 WEEK)
+    ";
+
+    $q2 = "SELECT tb_order.*, DATE_FORMAT(tb_order.tgl_order, '%d/%M') as tgl,
+            tb_pelayanan.nama_pelayanan, tb_pelayanan.harga, 
+            tb_users.foto_profil, 
+            tb_users.nama 
+            FROM tb_order
+            LEFT OUTER JOIN tb_users 
+            ON tb_order.id_user = tb_users.id_users 
+            JOIN tb_pelayanan 
+            ON tb_pelayanan.id_pelayanan = tb_order.id_pelayanan 
+            WHERE tb_order.status_order = 'selesai' 
+            AND tb_order.id_usaha = {$_POST['id_usaha']}
+            AND tb_order.tgl_order > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+    ";
+
+    $sql1 = mysqli_query($koneksi, $q);
+    $sql2 = mysqli_query($koneksi, $q2);
+
+    if ($sql1 || $sql2) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Data history order',
+            'data' => [
+                "w" => mysqli_fetch_all($sql1, MYSQLI_ASSOC),
+                "m" => mysqli_fetch_all($sql2, MYSQLI_ASSOC)
+            ]
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No results found!',
+            'data' => null
+        ]);
     }
 }
 
