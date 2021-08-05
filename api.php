@@ -56,15 +56,14 @@ switch ($op) {
     case 'batal_order': batalOrder();break;
     case 'profit_now': pendapatanHariIni();break;
     case 'orderlast_user': orderLast_user();break;
+    case 'user_always_order': userAlwaysOrder();break;
 }
 
 function pendapatanHariIni() {
     global $koneksi;
     $post = $_POST;
 
-    $q = "SELECT SUM(p.harga) AS total FROM tb_order AS o
-        JOIN tb_pelayanan AS p
-        ON o.id_pelayanan = p.id_pelayanan
+    $q = "SELECT SUM(o.total_order) AS total FROM tb_order AS o
         WHERE o.id_usaha = $post[id_usaha]
         AND o.tgl_order = '".date('Y-m-d')."'
         AND o.status_order = 'selesai' ";
@@ -82,6 +81,35 @@ function pendapatanHariIni() {
             'success' => false,
             'message' => 'Error get profit day',
         ]);  
+    }
+}
+
+function userAlwaysOrder() {
+    global $koneksi;
+    $post = $_POST;
+
+    $q = "SELECT COUNT(o.id_user) AS total, o.id_user, u.nama, u.foto_profil
+    FROM tb_order AS o
+    JOIN tb_users AS u
+    ON u.id_users = o.id_user
+    WHERE o.id_usaha = $post[id_usaha]
+    AND o.tgl_order > DATE_SUB(NOW(), INTERVAL 6 MONTH)
+    GROUP BY o.id_user 
+    ORDER BY total DESC";
+        
+    $result = mysqli_fetch_all(mysqli_query($koneksi, $q), MYSQLI_ASSOC);
+
+    if ($result) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Get user always order 6 month',
+            'data' => $result
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error get user always orders',
+        ]);        
     }
 }
 
@@ -228,10 +256,12 @@ function addOrder() {
                 'message' => 'Pesanan sudah penuh, harap menunggu beberapa saat!',
             ]);
         } else {
+            $pelayanan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM tb_pelayanan WHERE id_pelayanan = $post[id_pelayanan]"));
+            
             $q = "INSERT INTO tb_order 
-                (id_user, id_usaha, id_pelayanan, tgl_order )
+                (id_user, id_usaha, id_pelayanan, tgl_order, total_order )
                 VALUES
-                ($post[id_user], $post[id_usaha], $post[id_pelayanan], '".date('Y-m-d')."')";
+                ($post[id_user], $post[id_usaha], $post[id_pelayanan], '".date('Y-m-d')."', $pelayanan[harga])";
 
             $insert = mysqli_query($koneksi, $q);
 
@@ -595,7 +625,7 @@ function update(){
         $set[] = "no_hp='$no_hp'";
     }
     if ($foto_profil) {
-        $set[] = "foto_profil='$foto_profil'";
+        $set[] = "foto_profil='foto_users/$foto_profil'";
     }
     if ($alamat) {
         $set[] = "alamat_user='$alamat'";
@@ -607,7 +637,7 @@ function update(){
     if ($nama or $email or $no_hp or $foto_profil or $alamat or $tgl_lahir) {
         if(!empty($_FILES['file_attachment']['name']))
   {
-    $target_dir = "uploads/";
+    $target_dir = "foto_users/";
     if (!file_exists($target_dir))
     {
       mkdir($target_dir, 0777);

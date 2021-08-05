@@ -174,7 +174,7 @@ class Auth {
 
         $hasil = [];
         
-        if($mail->Send()){ 
+        if(! $mail->Send()){ 
             $insert_query = "INSERT INTO {$this->table} (email, password, kode_otp) VALUES (
                 '$email', '', '$otp'
             )";

@@ -31,7 +31,7 @@ class Queue {
         
         $queues = mysqli_query($this->koneksi, $q);
 
-        if (mysqli_num_rows($queues)) {
+        if (! mysqli_error($this->koneksi)) {
 
             $hasil['success']= true;
             $hasil['message']= $q;
@@ -43,7 +43,7 @@ class Queue {
             
             $hasil['success']= false;
             $hasil['message']= 'No result found!';
-            // $hasil['message']= $q;
+            $hasil['message']= $q;
             $hasil['data'] = null;
             
             echo json_encode($hasil);
@@ -55,7 +55,7 @@ class Queue {
         $q = "SELECT tb_order.*, tb_pelayanan.nama_pelayanan, tb_pelayanan.harga, tb_users.foto_profil, tb_users.nama FROM {$this->table} LEFT OUTER JOIN tb_users ON tb_order.id_user = tb_users.id_users JOIN tb_pelayanan ON tb_pelayanan.id_pelayanan = tb_order.id_pelayanan WHERE tb_order.status_order = 'belum selesai' AND tb_order.id_usaha = '{$_POST['id_usaha']}' AND tb_order.tgl_order = '".date('Y-m-d')."'";
         $queues = mysqli_query($this->koneksi, $q);
 
-        if ($queues) {
+        if (! mysqli_error($this->koneksi)) {
 
             $hasil['success']= true;
             $hasil['message']= 'Data order antrian!';
@@ -79,7 +79,7 @@ class Queue {
         $q = "SELECT tb_order.*, DATE_FORMAT(tb_order.tgl_order, '%d/%M') as tgl, tb_pelayanan.nama_pelayanan, tb_pelayanan.harga, tb_users.foto_profil, tb_users.nama FROM {$this->table} LEFT OUTER JOIN tb_users ON tb_order.id_user = tb_users.id_users JOIN tb_pelayanan ON tb_pelayanan.id_pelayanan = tb_order.id_pelayanan WHERE tb_order.status_order = 'selesai' AND tb_order.id_usaha = '{$_POST['id_usaha']}'";
         $queues = mysqli_query($this->koneksi, $q);
 
-        if (mysqli_num_rows($queues)) {
+        if (! mysqli_error($this->koneksi)) {
 
             $hasil['success']= true;
             $hasil['message']= 'Data history order!';
