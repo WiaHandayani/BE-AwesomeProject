@@ -5,9 +5,9 @@ require_once "PHPMailer/PHPMailer.php";
 require_once "PHPMailer/SMTP.php";
 require_once "PHPMailer/Exception.php";
 
-$host   = "localhost";
-$user   = "root";
-$pass   = "";
+$host   = "db4free.net"; // localhost
+$user   = "wiahanday04";
+$pass   = "dictioner";
 $db     = "db_get_haircut";
 
 function random($panjang){
