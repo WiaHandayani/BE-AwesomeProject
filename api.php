@@ -482,7 +482,7 @@ function create(){
             $hasil[]='Silahkan cek e-mail anda!';
 
         }else{ 
-            $hasil='E-mail tidak terdaftar!';
+            $hasil='E-mail tidak terdaftar! '.$mail->ErrorInfo;
         }
     }
     echo json_encode($hasil);
