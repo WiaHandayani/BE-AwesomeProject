@@ -461,11 +461,12 @@ function create(){
         $mail = new PHPMailer();
         $mail->IsSMTP();
         $mail->Host     = "smtp.gmail.com";
-        $mail->SMTPAuth = TRUE;
+        $mail->SMTPAuth = false;
+        $mail->SMTPAutoTLS = false; 
         $mail->Username = "gethaircutapplication@gmail.com";
         $mail->Password = "since2021";
-        $mail->Port=465;
-        $mail->SMTPSecure= "ssl";
+        $mail->Port=25;
+        // $mail->SMTPSecure= "ssl";
         $otp = random(6); 
         //Settings email
         $mail->IsHTML(true);
