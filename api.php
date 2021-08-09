@@ -466,7 +466,7 @@ function create(){
         $mail->Username = "gethaircutapplication@gmail.com";
         $mail->Password = "since2021";
         $mail->Port=25;
-        // $mail->SMTPSecure= "ssl";
+        $mail->SMTPSecure= "ssl";
         $otp = random(6); 
         //Settings email
         $mail->IsHTML(true);
